@@ -129,11 +129,34 @@ class Model(object):
 				self.failed.append(filename)
 
 
-	def gen_corpora_dict(self):
+	def gen_corpora(self):
 		logging.debug("creating corpora dictionary for texts: %s.dict" % self.name)
+		# creating gensim dictionary
 		self.dictionary = corpora.Dictionary(self.texts)
 		self.dictionary.save('%s/%s.dict' % (localConfig.INDEX_PATH, self.name))
+		# creating gensim corpus
+		self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
+		'''
+		Consider future options for alternate formats:
+			Other formats include Joachim’s SVMlight format, Blei’s LDA-C format and GibbsLDA++ format.
+
+			>>> corpora.SvmLightCorpus.serialize('/tmp/corpus.svmlight', corpus)
+			>>> corpora.BleiCorpus.serialize('/tmp/corpus.lda-c', corpus)
+			>>> corpora.LowCorpus.serialize('/tmp/corpus.low', corpus)
+		'''
+		corpora.MmCorpus.serialize('%s/%s.mm' % (localConfig.INDEX_PATH, self.name), self.corpus)
 		logging.debug('finis.')
+
+
+	def load_corpora(self,filename):
+		'''
+		see above for selecting other corpora serializations
+		'''
+		target_path = '%s/%s.mm' % (localConfig.INDEX_PATH, filename)
+		if os.path.exists(target_path):
+			logging.debug("loading serialized corpora model: %s.mm" % filename)
+			self.corpus = corpora.MmCorpus(target_path)
+
 
 
 
