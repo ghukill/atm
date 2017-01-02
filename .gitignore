@@ -90,3 +90,5 @@ ENV/
 
 # localConfig
 localConfig.py
+db
+db/

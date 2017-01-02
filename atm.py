@@ -20,6 +20,13 @@ import dropbox
 
 import localConfig
 
+import leveldb
+import json
+
+
+# initialize db
+db = leveldb.LevelDB('./db')
+
 
 class DBXClient(object):
 
@@ -29,7 +36,7 @@ class DBXClient(object):
 		self.api = dropbox.Dropbox(localConfig.DROPBOX_ACCESS_TOKEN)
 
 
-	def download_files(self, limit=None):
+	def download_files(self, limit=None, extract_text=False):
 		'''
 		lists DROPBOX_PATH, downloads files
 		'''
@@ -41,6 +48,14 @@ class DBXClient(object):
 			if type(entry) == dropbox.files.FileMetadata:
 				r = self.api.files_download_to_file('%s/%s' % (self.corpora_path, entry.name), entry.path_lower)
 				logging.debug(r)
+				# if extract text and saving to db, do that now
+				if extract_text:
+					a = Article()
+					a.load_local(entry.name)
+					try:
+						a.extract_text()
+					except:
+						logging.warning('could not exract text, continuing')
 				if limit is not None:
 					count += 1
 					if count >= limit:
@@ -79,6 +94,12 @@ class Article(object):
 			logging.debug('file found')
 			self.filename = filename
 			self.file_handle = open('%s/%s' % (self.corpora_path, filename))
+			# check for extracted tokens in db
+			try:
+				logging.debug('tokens found in db')
+				self.tokens = json.loads(db.Get(self.filename))
+			except KeyError:
+				logging.debug('could not find tokens in db')
 		else:
 			logging.debug('file not found')
 			return False
@@ -104,11 +125,8 @@ class Article(object):
 			for token in self.tokens:
 				frequency[token] += 1
 			self.tokens = [token for token in self.tokens if frequency[token] > localConfig.WORD_COUNT_MIN]
-			# # save as raw text
-			# with open('%s/%s.rawtxt' % (self.corpora_path, self.filename),'w') as f:
-			# 	for token in self.tokens:
-			# 		f.write("%s\n" % token)
-
+			# save raw text to level db
+			db.Put(self.filename, json.dumps(self.tokens))
 
 
 class Model(object):
@@ -133,7 +151,10 @@ class Model(object):
 				# using Article class
 				a = Article()
 				a.load_local(filename)
-				a.extract_text()
+				# if tokens have not been extracted and save to db, do that now
+				if a.tokens == None:
+					logging.debug("tokens not found in db, extracting now")
+					a.extract_text()
 				self.texts.append(a.tokens)
 				self.article_hash[filename] = len(self.texts) - 1
 			except:

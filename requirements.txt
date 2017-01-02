@@ -2,3 +2,4 @@ nltk
 gensim
 git+https://github.com/timClicks/slate.git
 dropbox
+leveldb
