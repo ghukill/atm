@@ -1,0 +1,6 @@
+# config
+
+INDEX_PATH = 'index'
+CORPORA_PATH = 'data/articles'
+DROPBOX_ACCESS_TOKEN = 'foooooooooooooooobbbbbbbbbbbaaaaaaaaaaaaaaaaarrrrrrrrrrrrrrrrrrr'
+DROPBOX_PATH = '/articles'
