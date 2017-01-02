@@ -14,6 +14,7 @@ import gensim
 from gensim import corpora
 
 import os
+from collections import defaultdict
 
 import dropbox
 
@@ -63,10 +64,17 @@ class Article(object):
 
 	def __init__(self):
 		self.corpora_path = localConfig.CORPORA_PATH
+		self.stoplist = set(stopwords.words('english'))
+
 		self.file_handle = False
+		self.raw_text = False
+		self.tokens = None
 
 
 	def load_local(self,filename):
+		'''
+		opens filename that combines the corpora path and provided filename
+		'''
 		if os.path.exists('%s/%s' % (self.corpora_path, filename)):
 			logging.debug('file found')
 			self.file_handle = open('%s/%s' % (self.corpora_path, filename))
@@ -77,8 +85,55 @@ class Article(object):
 		requires open self.file_handle
 		'''
 		if self.file_handle:
+			logging.debug('opening as slate document')
 			self.slate_doc = slate.PDF(self.file_handle)
+			logging.debug('decoding as utf-8')
 			self.raw_text = "\n".join(self.slate_doc).decode('utf-8')
-			
+			logging.debug('extracting words, removing stopwords and punctuation')
+			self.tokens = [word for word in self.raw_text.lower().split() if word not in self.stoplist]
+			logging.debug('removing words that appear > than WORD_COUNT_MIN: %d' % localConfig.WORD_COUNT_MIN)
+			frequency = defaultdict(int)
+			for token in self.tokens:
+				frequency[token] += 1
+			self.tokens = [token for token in self.tokens if frequency[token] > localConfig.WORD_COUNT_MIN]
+
+
+class Model(object):
+
+	'''
+	This is where multiple articles are aggregated as a gensim model
+	'''
+
+	def __init__(self, name):
+		self.texts = []
+		self.article_hash = {}
+		self.failed = []
+		self.name = name
+
+
+	def get_all_articles(self):
+
+		for filename in os.listdir(localConfig.CORPORA_PATH):
+			try:
+				logging.debug("\n\n")
+				logging.debug("including article %s" % filename)
+
+				# using Article class
+				a = Article()
+				a.load_local(filename)
+				a.extract_text()
+				self.texts.append(a.tokens)
+				self.article_hash[filename] = len(self.texts) - 1
+			except:
+				logging.warning("failed on %s" % filename)
+				self.failed.append(filename)
+
+
+	def gen_corpora_dict(self):
+		logging.debug("creating corpora dictionary for texts: %s.dict" % self.name)
+		self.dictionary = corpora.Dictionary(self.texts)
+		self.dictionary.save('%s/%s.dict' % (localConfig.INDEX_PATH, self.name))
+		logging.debug('finis.')
+
 
 
