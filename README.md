@@ -16,3 +16,6 @@ import nltk
 nltk.download() # opens pop-up, download corpora/stopwords.txt
 ```
 
+## Discussion
+
+This is currently using flat storage for downloaded articles, indexes, etc., which is fine.  But if we were to leverage a DB, it would make possible things like extracting raw text and tokenizing, then saving that output alongside the original PDF.  We could do that now with flat files, but it requires falling back on naming conventions.

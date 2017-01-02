@@ -65,7 +65,7 @@ class Article(object):
 	def __init__(self):
 		self.corpora_path = localConfig.CORPORA_PATH
 		self.stoplist = set(stopwords.words('english'))
-
+		self.filename = False
 		self.file_handle = False
 		self.raw_text = False
 		self.tokens = None
@@ -77,7 +77,11 @@ class Article(object):
 		'''
 		if os.path.exists('%s/%s' % (self.corpora_path, filename)):
 			logging.debug('file found')
+			self.filename = filename
 			self.file_handle = open('%s/%s' % (self.corpora_path, filename))
+		else:
+			logging.debug('file not found')
+			return False
 
 
 	def extract_text(self):
@@ -85,17 +89,26 @@ class Article(object):
 		requires open self.file_handle
 		'''
 		if self.file_handle:
+			# open slate document
 			logging.debug('opening as slate document')
 			self.slate_doc = slate.PDF(self.file_handle)
 			logging.debug('decoding as utf-8')
+			# decode as utf-8
 			self.raw_text = "\n".join(self.slate_doc).decode('utf-8')
 			logging.debug('extracting words, removing stopwords and punctuation')
+			# remove stopwords
 			self.tokens = [word for word in self.raw_text.lower().split() if word not in self.stoplist]
+			# remove words that only appear once
 			logging.debug('removing words that appear > than WORD_COUNT_MIN: %d' % localConfig.WORD_COUNT_MIN)
 			frequency = defaultdict(int)
 			for token in self.tokens:
 				frequency[token] += 1
 			self.tokens = [token for token in self.tokens if frequency[token] > localConfig.WORD_COUNT_MIN]
+			# # save as raw text
+			# with open('%s/%s.rawtxt' % (self.corpora_path, self.filename),'w') as f:
+			# 	for token in self.tokens:
+			# 		f.write("%s\n" % token)
+
 
 
 class Model(object):
@@ -117,7 +130,6 @@ class Model(object):
 			try:
 				logging.debug("\n\n")
 				logging.debug("including article %s" % filename)
-
 				# using Article class
 				a = Article()
 				a.load_local(filename)
