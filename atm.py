@@ -62,6 +62,23 @@ class DBXClient(object):
 						return
 
 
+	def download_file(self, filename, extract_text=False):
+		'''
+		download specific file
+		todo: refactor the download part shared with above
+		# problem: Borglund_Nuldén_2012.pdf
+		'''
+		entry = self.api.files_get_metadata('%s/%s' % (self.dropbox_path, filename))
+		r = self.api.files_download_to_file('%s/%s' % (self.corpora_path, entry.name), entry.path_lower)
+		if extract_text:
+			a = Article()
+			a.load_local(entry.name)
+			try:
+				a.extract_text()
+			except:
+				logging.warning('could not exract text, continuing')
+
+
 	def list_files(self):
 		'''
 		lists DROPBOX_PATH
@@ -96,10 +113,12 @@ class Article(object):
 			self.file_handle = open('%s/%s' % (self.corpora_path, filename))
 			# check for extracted tokens in db
 			try:
-				logging.debug('tokens found in db')
 				self.tokens = json.loads(db.Get(self.filename))
+				logging.debug('tokens found in db')
 			except KeyError:
 				logging.debug('could not find tokens in db')
+			except UnicodeEncodeError:
+				logging.debug('Unicode error...')	
 		else:
 			logging.debug('file not found')
 			return False
