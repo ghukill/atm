@@ -60,7 +60,7 @@ class DBXClient(object):
 				# if extract text and saving to db, do that now
 				if extract_text:
 					a = Article()
-					a.load_local(entry.name)
+					a.load_local(entry.name.encode('utf-8'))
 					try:
 						a.extract_text()
 					except:
@@ -81,7 +81,7 @@ class DBXClient(object):
 		r = self.api.files_download_to_file('%s/%s' % (self.corpora_path, entry.name), entry.path_lower)
 		if extract_text:
 			a = Article()
-			a.load_local(entry.name)
+			a.load_local(entry.name.encode('utf-8'))
 			try:
 				a.extract_text()
 			except:
@@ -118,7 +118,7 @@ class Article(object):
 		'''
 		hashes filename with md5, return hexdigest
 		'''
-		id = md5.new(filename.encode('utf-8')).hexdigest()
+		id = md5.new(filename).hexdigest()
 		logging.debug("generated id: %s" % id)
 		return id
 
@@ -234,4 +234,28 @@ class Model(object):
 
 
 
+class Tests(object):
 
+
+	plain_filename = 'Anderson_2008.pdf'
+	unicode_filename = 'Borglund_Nuldén_2012.pdf'
+
+
+	def download_unicode_filename(self):
+		d = DBXClient()
+		r = d.download_file(self.unicode_filename, extract_text=True)
+
+
+	def load_local_unicode_filename(self):
+		a = Article()
+		a.load_local(self.unicode_filename)
+
+
+	def download_plain_filename(self):
+		d = DBXClient()
+		r = d.download_file(self.plain_filename, extract_text=True)
+
+
+	def load_local_plain_filename(self):
+		a = Article()
+		a.load_local(self.plain_filename)
