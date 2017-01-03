@@ -1,33 +1,42 @@
 # api.py
 # -*- coding: utf-8 -*-
 
-import slate
 
-from nltk.corpus import stopwords 
-from nltk.stem.wordnet import WordNetLemmatizer
-import string
-
+from collections import defaultdict
+import json
 import logging
 logging.basicConfig(level=logging.DEBUG)
+import md5
+import os
+import string
 
+# Dropbox
+import dropbox
+
+# GenSim
 import gensim
 from gensim import corpora
 
-import os
-from collections import defaultdict
+# LevelDB
+import leveldb
 
-import dropbox
+# NLTK
+from nltk.corpus import stopwords 
+from nltk.stem.wordnet import WordNetLemmatizer
 
+# Slate
+import slate
+
+# localConfig
 import localConfig
 
-import leveldb
-import json
 
 
-# initialize db
+# initialize LevelDB instance
 db = leveldb.LevelDB('./db')
 
 
+# Dropbox Client
 class DBXClient(object):
 
 	def __init__(self):
@@ -91,6 +100,7 @@ class DBXClient(object):
 
 
 
+# Article class
 class Article(object):
 
 
@@ -98,22 +108,34 @@ class Article(object):
 		self.corpora_path = localConfig.CORPORA_PATH
 		self.stoplist = set(stopwords.words('english'))
 		self.filename = False
+		self.id = False
 		self.file_handle = False
 		self.raw_text = False
 		self.tokens = None
 
 
-	def load_local(self,filename):
+	def gen_id(self, filename):
+		'''
+		hashes filename with md5, return hexdigest
+		'''
+		id = md5.new(filename.encode('utf-8')).hexdigest()
+		logging.debug("generated id: %s" % id)
+		return id
+
+
+	def load_local(self, filename):
 		'''
 		opens filename that combines the corpora path and provided filename
 		'''
 		if os.path.exists('%s/%s' % (self.corpora_path, filename)):
 			logging.debug('file found')
 			self.filename = filename
+			# set id
+			self.id = self.gen_id(self.filename)
 			self.file_handle = open('%s/%s' % (self.corpora_path, filename))
 			# check for extracted tokens in db
 			try:
-				self.tokens = json.loads(db.Get(self.filename))
+				self.tokens = json.loads(db.Get(self.id))
 				logging.debug('tokens found in db')
 			except KeyError:
 				logging.debug('could not find tokens in db')
@@ -145,9 +167,10 @@ class Article(object):
 				frequency[token] += 1
 			self.tokens = [token for token in self.tokens if frequency[token] > localConfig.WORD_COUNT_MIN]
 			# save raw text to level db
-			db.Put(self.filename, json.dumps(self.tokens))
+			db.Put(self.id, json.dumps(self.tokens))
 
 
+# Model class
 class Model(object):
 
 	'''
