@@ -14,8 +14,7 @@ import string
 import dropbox
 
 # GenSim
-import gensim
-from gensim import corpora
+from gensim import corpora, models, similarities
 
 # LevelDB
 import leveldb
@@ -223,14 +222,25 @@ class Model(object):
 		logging.debug('finis.')
 
 
-	def load_corpora(self,filename):
+	def load_dict_and_corpora(self,filename):
 		'''
 		see above for selecting other corpora serializations
 		'''
+		# load corpora
 		target_path = '%s/%s.mm' % (localConfig.INDEX_PATH, filename)
 		if os.path.exists(target_path):
 			logging.debug("loading serialized corpora model: %s.mm" % filename)
 			self.corpus = corpora.MmCorpus(target_path)
+		# load dictionary
+		target_path = '%s/%s.dict' % (localConfig.INDEX_PATH, filename)
+		if os.path.exists(target_path):
+			logging.debug("loading serialized dictionary: %s.dict" % filename)
+			self.dictionary = corpora.Dictionary.load(target_path)
+
+
+	# def similarity(self):
+	# 	self.lsi = models.LsiModel(self.corpus, id2word=self.dictionary, num_topics=2)
+
 
 
 
