@@ -34,8 +34,6 @@ a.as_vec_bow()
 # run article similarity query, combing article and model
 # this saves to `article.sims`
 m.article_similarity_query(a)
-# sort similarities
-a.sims = sorted(enumerate(a.sims), key=lambda item: -item[1])
 # view similarities
 print a.sims
 # document index with percentages returned, to get filename from doc index
