@@ -16,6 +16,30 @@ import nltk
 nltk.download() # opens pop-up, download corpora/stopwords.txt
 ```
 
+## Article Similarity 
+```
+# import saved corpus, model, and index
+m = atm.Model('MODEL_NAME')
+m.load_corpora()
+m.load_lda()
+# populate article_hash (Move to other approach...)
+m.get_all_articles()
+# open article
+a = atm.Article()
+a.load_local('ARTICLE_FILENAME')
+# generate attribute as vector bag of words (vec_bow)
+a.as_vec_bow()
+# run article similarity query, combing article and model
+# this saves to `article.sims`
+m.article_similarity_query(a)
+# sort similarities
+a.sims = sorted(enumerate(a.sims), key=lambda item: -item[1])
+# view similarities
+print a.sims
+# document index with percentages returned, to get filename from doc index
+doc_filename = m.get_article_filename(DOC_INDEX_FROM_SIMS)
+```
+
 ## Discussion
 
 This is currently using flat storage for downloaded articles, indexes, etc., which is fine.  But if we were to leverage a DB, it would make possible things like extracting raw text and tokenizing, then saving that output alongside the original PDF.  We could do that now with flat files, but it requires falling back on naming conventions.

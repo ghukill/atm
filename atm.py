@@ -15,7 +15,7 @@ import dropbox
 
 # GenSim
 import gensim
-from gensim import corpora
+from gensim import corpora, models
 
 # LevelDB
 import leveldb
@@ -170,6 +170,16 @@ class Article(object):
 			db.Put(self.id, json.dumps(self.tokens))
 
 
+	def as_vec_bow(self, m):
+		'''
+		pass model (m) to doc, affix .doc_bow, using self.tokens
+		'''
+		self.vec_bow = m.id2word.doc2bow(self.tokens)
+		return self.vec_bow
+
+
+
+
 # Model class
 class Model(object):
 
@@ -223,14 +233,81 @@ class Model(object):
 		logging.debug('finis.')
 
 
-	def load_corpora(self,filename):
+	def load_corpora(self):
 		'''
 		see above for selecting other corpora serializations
+		this should also load dictionary
 		'''
-		target_path = '%s/%s.mm' % (localConfig.INDEX_PATH, filename)
+
+		target_path = '%s/%s.mm' % (localConfig.INDEX_PATH, self.name)
 		if os.path.exists(target_path):
-			logging.debug("loading serialized corpora model: %s.mm" % filename)
+			logging.debug("loading serialized corpora: %s.mm" % self.name)
 			self.corpus = corpora.MmCorpus(target_path)
+
+		target_path = '%s/%s.dict' % (localConfig.INDEX_PATH, self.name)
+		if os.path.exists(target_path):
+			logging.debug("loading serialized dictionary: %s.dict" % self.name)
+			self.id2word = corpora.Dictionary.load(target_path)
+
+
+	def gen_lda(self, num_topics=100, chunksize=100, passes=1):
+		'''
+		creates LDA model from mm corpora and dictionary
+		'''
+		self.lda = models.ldamodel.LdaModel(corpus=self.corpus, id2word=self.id2word, num_topics=num_topics, update_every=1, chunksize=chunksize, passes=passes)
+		self.lda.save('%s/%s.lda' % (localConfig.MODEL_PATH, self.name))
+
+
+	def load_lda(self):
+		'''
+		loads saved LDA model
+		'''
+		self.lda = models.ldamodel.LdaModel.load('%s/%s.lda' % (localConfig.MODEL_PATH, self.name))
+
+
+	def save_lda(self):
+		self.lda.save('%s/%s.lda' % (localConfig.MODEL_PATH, self.name))
+
+
+	def get_doc_index(self, article):
+		'''
+		returns lda model index for article filename
+		'''
+		doc_index = self.article_hash[article.filename]
+		logging.debug('article %s is index %s from article_hash')
+		return doc_index
+
+
+	def get_article_filename(self, article_index):
+		for k in self.article_hash.keys():
+			if m.article_hash[k] == article_index:
+				return k
+
+
+	def gen_similarity_index(self):
+		self.index = gensim.similarities.MatrixSimilarity(self.lda[self.corpus])
+		self.index.save('%s/%s' % (localConfig.INDEX_PATH, self.name))
+
+
+	def load_similarity_index(self):
+		# add here
+		pass
+
+
+	def save_similarity_index(self):
+		# add here
+		pass
+
+
+	def article_similarity_query(self, article):
+		# check if article objct has vec_bow
+		if not article.vec_bow:
+			logging.debug('generating vector bag of words (vec_bow) for article')
+			article.as_vec_bow()
+		vec_lda = lda[article.vec_bow]
+		article.sims = self.index[vec_lda]
+		article.sims = sorted(enumerate(sims), key=lambda item: -item[1])
+		print article.sims
 
 
 
