@@ -41,7 +41,7 @@ print a.sims
 # document index with percentages returned, to get filename from doc index
 doc_filename = m.get_article_filename(DOC_INDEX_FROM_SIMS)
 # OR, view filenames of sims, with optional results parameter
-a.sims_as_filenames(results=10)
+a.sims_as_filenames(m, results=10)
 
 ```
 

@@ -177,7 +177,7 @@ class Article(object):
 		self.vec_bow = m.id2word.doc2bow(self.tokens)
 
 
-	def sims_as_filenames(self, results=10, m):
+	def sims_as_filenames(self, m, results=10):
 		top_sims = self.sims[:results]
 		for sim in top_sims:
 			print "%s @ %s" % (m.get_article_filename(sim[0]), "{:.1%}".format(sim[1]))
