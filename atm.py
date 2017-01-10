@@ -175,7 +175,13 @@ class Article(object):
 		pass model (m) to doc, affix .doc_bow, using self.tokens
 		'''
 		self.vec_bow = m.id2word.doc2bow(self.tokens)
-		return self.vec_bow
+
+
+	def sims_as_filenames(self, results=10, m):
+		top_sims = self.sims[:results]
+		for sim in top_sims:
+			print "%s @ %s" % (m.get_article_filename(sim[0]), "{:.1%}".format(sim[1]))
+
 
 
 
@@ -281,23 +287,21 @@ class Model(object):
 
 	def get_article_filename(self, article_index):
 		for k in self.article_hash.keys():
-			if m.article_hash[k] == article_index:
+			if self.article_hash[k] == article_index:
 				return k
 
 
 	def gen_similarity_index(self):
 		self.index = gensim.similarities.MatrixSimilarity(self.lda[self.corpus])
-		self.index.save('%s/%s' % (localConfig.INDEX_PATH, self.name))
+		self.index.save('%s/%s.simindex' % (localConfig.INDEX_PATH, self.name))
 
 
 	def load_similarity_index(self):
-		# add here
-		pass
+		self.index = gensim.similarities.MatrixSimilarity.load('%s/%s.simindex' % (localConfig.INDEX_PATH, self.name))
 
 
 	def save_similarity_index(self):
-		# add here
-		pass
+		self.index.save('%s/%s.simindex' % (localConfig.INDEX_PATH, self.name))
 
 
 	def article_similarity_query(self, article):
@@ -305,9 +309,9 @@ class Model(object):
 		if not article.vec_bow:
 			logging.debug('generating vector bag of words (vec_bow) for article')
 			article.as_vec_bow()
-		vec_lda = lda[article.vec_bow]
+		vec_lda = self.lda[article.vec_bow]
 		article.sims = self.index[vec_lda]
-		article.sims = sorted(enumerate(sims), key=lambda item: -item[1])
+		article.sims = sorted(enumerate(article.sims), key=lambda item: -item[1])
 		print article.sims
 
 

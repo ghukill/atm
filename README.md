@@ -24,6 +24,8 @@ m.load_corpora()
 m.load_lda()
 # populate article_hash (Move to other approach...)
 m.get_all_articles()
+# generate similarity index (or load)
+m.gen_similarity_index()
 # open article
 a = atm.Article()
 a.load_local('ARTICLE_FILENAME')
@@ -38,6 +40,9 @@ a.sims = sorted(enumerate(a.sims), key=lambda item: -item[1])
 print a.sims
 # document index with percentages returned, to get filename from doc index
 doc_filename = m.get_article_filename(DOC_INDEX_FROM_SIMS)
+# OR, view filenames of sims, with optional results parameter
+a.sims_as_filenames(results=10)
+
 ```
 
 ## Discussion
