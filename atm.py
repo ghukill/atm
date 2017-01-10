@@ -312,7 +312,7 @@ class Model(object):
 		vec_lda = self.lda[article.vec_bow]
 		article.sims = self.index[vec_lda]
 		article.sims = sorted(enumerate(article.sims), key=lambda item: -item[1])
-		print article.sims
+		# print article.sims
 
 
 
