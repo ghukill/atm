@@ -15,7 +15,7 @@ import dropbox
 
 # GenSim
 import gensim
-from gensim import corpora, models
+from gensim import corpora, models, similarities
 
 # LevelDB
 import leveldb
@@ -238,12 +238,13 @@ class Model(object):
 		see above for selecting other corpora serializations
 		this should also load dictionary
 		'''
-
+		# load corpora
 		target_path = '%s/%s.mm' % (localConfig.INDEX_PATH, self.name)
 		if os.path.exists(target_path):
 			logging.debug("loading serialized corpora: %s.mm" % self.name)
 			self.corpus = corpora.MmCorpus(target_path)
 
+		# load dictionary
 		target_path = '%s/%s.dict' % (localConfig.INDEX_PATH, self.name)
 		if os.path.exists(target_path):
 			logging.debug("loading serialized dictionary: %s.dict" % self.name)
