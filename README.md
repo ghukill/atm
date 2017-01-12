@@ -18,6 +18,8 @@ nltk.download() # opens pop-up, download corpora/stopwords.txt
 
 ## Article Similarity 
 ```
+# import atm
+import atm
 # import saved corpus, model, and index
 m = atm.Model('MODEL_NAME')
 m.load_corpora()
