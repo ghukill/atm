@@ -262,7 +262,14 @@ class Model(object):
 		'''
 		creates LDA model from mm corpora and dictionary
 		'''
-		self.lda = models.ldamodel.LdaModel(corpus=self.corpus, id2word=self.id2word, num_topics=num_topics, update_every=1, chunksize=chunksize, passes=passes)
+		self.lda = models.ldamodel.LdaModel(
+			corpus=self.corpus,
+			id2word=self.id2word,
+			num_topics=num_topics,
+			update_every=1,
+			chunksize=chunksize,
+			passes=passes
+		)
 		self.lda.save('%s/%s.lda' % (localConfig.MODEL_PATH, self.name))
 
 
