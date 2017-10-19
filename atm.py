@@ -105,6 +105,7 @@ class Article(object):
 
 
 	def __init__(self):
+
 		self.corpora_path = localConfig.CORPORA_PATH
 		self.stoplist = set(stopwords.words('english'))
 		self.filename = False
@@ -306,13 +307,12 @@ class Model(object):
 
 	def article_similarity_query(self, article):
 		# check if article objct has vec_bow
-		if not article.vec_bow:
+		if not hasattr(article, 'vec_bow'):
 			logging.debug('generating vector bag of words (vec_bow) for article')
 			article.as_vec_bow()
 		vec_lda = self.lda[article.vec_bow]
 		article.sims = self.index[vec_lda]
 		article.sims = sorted(enumerate(article.sims), key=lambda item: -item[1])
-		# print article.sims
 
 
 
