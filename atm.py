@@ -27,6 +27,9 @@ from nltk.stem.wordnet import WordNetLemmatizer
 # Slate
 import slate
 
+# PyPDF2
+import PyPDF2
+
 # localConfig
 import localConfig
 
@@ -133,7 +136,7 @@ class Article(object):
 			self.filename = filename
 			# set id
 			self.id = self.gen_id(self.filename)
-			self.file_handle = open('%s/%s' % (self.corpora_path, filename))
+			self.file_handle = open('%s/%s' % (self.corpora_path, filename), 'rb')
 			# check for extracted tokens in db
 			try:
 				self.tokens = json.loads(db.Get(self.id))
@@ -152,12 +155,22 @@ class Article(object):
 		requires open self.file_handle
 		'''
 		if self.file_handle:
-			# open slate document
-			logging.debug('opening as slate document')
-			self.slate_doc = slate.PDF(self.file_handle)
-			logging.debug('decoding as utf-8')
-			# decode as utf-8
-			self.raw_text = "\n".join(self.slate_doc).decode('utf-8')
+
+			if localConfig.TEXT_EXTRACT.lower() == 'slate':
+				# open slate document
+				logging.debug('opening as slate document')
+				self.slate_doc = slate.PDF(self.file_handle)
+				logging.debug('decoding as utf-8')
+				# decode as utf-8
+				self.raw_text = "\n".join(self.slate_doc).decode('utf-8')
+
+			if localConfig.TEXT_EXTRACT.lower() == 'pypdf2':
+				self.raw_text = ''
+				pdfReader = PyPDF2.PdfFileReader(self.file_handle)
+				for pnum in range(0,pdfReader.numPages):
+					pageObj = pdfReader.getPage(pnum)
+					self.raw_text += "%s\n" % pageObj.extractText()
+
 			logging.debug('extracting words, removing stopwords and punctuation')
 			# remove stopwords
 			self.tokens = [word for word in self.raw_text.lower().split() if word not in self.stoplist]
@@ -320,6 +333,7 @@ class Model(object):
 		vec_lda = self.lda[article.vec_bow]
 		article.sims = self.index[vec_lda]
 		article.sims = sorted(enumerate(article.sims), key=lambda item: -item[1])
+		article.sims = [ sim for sim in article.sims if sim[1] != 0.0 ]
 
 
 
