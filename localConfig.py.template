@@ -2,6 +2,13 @@
 
 INDEX_PATH = 'index'
 CORPORA_PATH = 'data/articles'
-DROPBOX_ACCESS_TOKEN = 'foooooooooooooooobbbbbbbbbbbaaaaaaaaaaaaaaaaarrrrrrrrrrrrrrrrrrr'
+DROPBOX_ACCESS_TOKEN = 'fooooooooooobbbbbbbbbbbbbbaaaaaaaaaaaaarrrrrrrrrrrrrrrr'
 DROPBOX_PATH = '/articles'
 WORD_COUNT_MIN = 1
+MODEL_PATH = 'models'
+TEXT_EXTRACT = 'PyPDF2' # from one of the following ['slate','PyPDF2']
+
+
+# LDA model training
+LDA_TOPICS = 100
+LDA_PASSES = 5

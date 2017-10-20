@@ -271,15 +271,14 @@ class Model(object):
 			self.id2word = corpora.Dictionary.load(target_path)
 
 
-	def gen_lda(self, num_topics=100, chunksize=100, passes=1):
+	def gen_lda(self, num_topics=localConfig.LDA_TOPICS, chunksize=100, passes=localConfig.LDA_PASSES):
 		'''
 		creates LDA model from mm corpora and dictionary
 		'''
-		self.lda = models.ldamodel.LdaModel(
+		self.lda = models.ldamulticore.LdaMulticore(
 			corpus=self.corpus,
 			id2word=self.id2word,
 			num_topics=num_topics,
-			update_every=1,
 			chunksize=chunksize,
 			passes=passes
 		)
